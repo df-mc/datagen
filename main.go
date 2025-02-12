@@ -2,21 +2,15 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"github.com/df-mc/datagen/data"
-	"github.com/df-mc/datagen/models"
+	"github.com/df-mc/datagen/dragonfly"
+	"github.com/df-mc/datagen/pocketmine"
 	_ "github.com/df-mc/dragonfly/server/world"
-	"github.com/df-mc/dragonfly/server/world/chunk"
 	"github.com/sandertv/gophertunnel/minecraft"
 	"github.com/sandertv/gophertunnel/minecraft/auth"
-	"github.com/sandertv/gophertunnel/minecraft/nbt"
-	"github.com/sandertv/gophertunnel/minecraft/protocol"
 	"github.com/sandertv/gophertunnel/minecraft/protocol/packet"
 	"golang.org/x/oauth2"
-	"math"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"syscall"
 )
 
@@ -35,17 +29,8 @@ func main() {
 	if err := conn.DoSpawn(); err != nil {
 		panic(err)
 	}
-
-	requiredItemList := make(map[string]models.RequiredItemEntry)
-	for _, item := range conn.GameData().Items {
-		data.ItemNameToNetworkID[item.Name] = int32(item.RuntimeID)
-		data.ItemNetworkIDToName[int32(item.RuntimeID)] = item.Name
-		requiredItemList[item.Name] = models.RequiredItemEntry{
-			RuntimeID:      item.RuntimeID,
-			ComponentBased: item.ComponentBased,
-		}
-	}
-	writeNBT("output/dragonfly/server/world/item_runtime_ids.nbt", data.ItemNameToNetworkID)
+	dragonfly.HandleGameData(conn.GameData())
+	pocketmine.HandleGameData(conn.GameData())
 
 	for {
 		pk, err := conn.ReadPacket()
@@ -54,83 +39,17 @@ func main() {
 		}
 
 		switch p := pk.(type) {
+		case *packet.AvailableActorIdentifiers:
+			pocketmine.HandleAvailableActorIdentifiers(p)
+		case *packet.BiomeDefinitionList:
+			pocketmine.HandleBiomeDefinitionList(p)
 		case *packet.CraftingData:
-			var shaped []models.ShapedRecipe
-			var shapeless, smithing, smithingTrim []models.ShapelessRecipe
-			for _, recipe := range p.Recipes {
-				switch recipe := recipe.(type) {
-				case *protocol.ShapelessRecipe:
-					shapeless = append(shapeless, models.NewShapelessRecipe(*recipe))
-				case *protocol.ShapedRecipe:
-					shaped = append(shaped, models.NewShapedRecipe(*recipe))
-				case *protocol.SmithingTransformRecipe:
-					smithing = append(smithing, models.NewShapelessRecipe(protocol.ShapelessRecipe{
-						Input:  []protocol.ItemDescriptorCount{recipe.Base, recipe.Addition, recipe.Template},
-						Output: []protocol.ItemStack{recipe.Result},
-						Block:  recipe.Block,
-					}))
-				case *protocol.SmithingTrimRecipe:
-					smithingTrim = append(smithingTrim, models.NewShapelessRecipe(protocol.ShapelessRecipe{
-						Input: []protocol.ItemDescriptorCount{recipe.Base, recipe.Addition, recipe.Template},
-						Block: recipe.Block,
-					}))
-				}
-			}
-			writeNBT("output/dragonfly/server/item/recipe/crafting_data.nbt", models.CraftingRecipes{Shaped: shaped, Shapeless: shapeless})
-			writeNBT("output/dragonfly/server/item/recipe/smithing_data.nbt", smithing)
-			writeNBT("output/dragonfly/server/item/recipe/smithing_trim_data.nbt", smithingTrim)
+			dragonfly.HandleCraftingData(p)
+			pocketmine.HandleCraftingData(p)
 		case *packet.CreativeContent:
-			var entries []models.CreativeItem
-			for _, c := range p.Items {
-				item := c.Item
-				entry := models.CreativeItem{
-					Name: data.ItemNetworkIDToName[item.ItemType.NetworkID],
-					Meta: int16(item.ItemType.MetadataValue),
-					NBT:  item.NBTData,
-				}
-				if entry.Meta == math.MaxInt16 {
-					entry.Meta = 0
-				}
-				if item.BlockRuntimeID > 0 {
-					if entry.Meta != 0 {
-						panic(fmt.Errorf("block item %s has non-zero metadata %d", entry.Name, entry.Meta))
-					}
-					_, props, ok := chunk.RuntimeIDToState(uint32(item.BlockRuntimeID))
-					if ok {
-						entry.BlockProperties = props
-					} else {
-						panic(fmt.Errorf("failed to get block properties for item %s with runtime ID %d", entry.Name, item.BlockRuntimeID))
-					}
-				}
-				entries = append(entries, entry)
-			}
-			writeNBT("output/dragonfly/server/item/creative/creative_items.nbt", entries)
+			dragonfly.HandleCreativeContent(p)
+			pocketmine.HandleCreativeContent(p)
 		}
-	}
-}
-
-func writeJSON(path string, v any) {
-	b, err := json.MarshalIndent(v, "", "    ")
-	if err != nil {
-		panic(fmt.Errorf("failed to marshal data for %s: %w", path, err))
-	}
-	writeRaw(path, b)
-}
-
-func writeNBT(path string, v any) {
-	b, err := nbt.Marshal(v)
-	if err != nil {
-		panic(fmt.Errorf("failed to marshal data for %s: %w", path, err))
-	}
-	writeRaw(path, b)
-}
-
-func writeRaw(path string, b []byte) {
-	fmt.Println("Writing", path)
-	_ = os.MkdirAll(filepath.Dir(path), 0755)
-	err := os.WriteFile(path, b, 0644)
-	if err != nil {
-		panic(fmt.Errorf("failed to write data to %s: %w", path, err))
 	}
 }
 

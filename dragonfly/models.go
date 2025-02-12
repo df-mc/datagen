@@ -1,4 +1,4 @@
-package models
+package dragonfly
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	CurrentBlockVersion = (1 << 24) | (20 << 16) | (80 << 8) | 3 // 18108419
+	CurrentBlockVersion = (1 << 24) | (21 << 16) | (20 << 8) | 6 // 18158598
 )
 
 // CraftingRecipes represents the structure for crafting_data.nbt that dragonfly uses.
@@ -18,12 +18,33 @@ type CraftingRecipes struct {
 	Shapeless []ShapelessRecipe `nbt:"shapeless"`
 }
 
+// CreativeContent represents the structure of the creative_items.nbt file that dragonfly reads from.
+type CreativeContent struct {
+	Groups []CreativeGroup `nbt:"groups"`
+	Items  []CreativeItem  `nbt:"items"`
+}
+
+// CreativeGroup represents the structure of a creative group that dragonfly reads from creative_items.nbt.
+type CreativeGroup struct {
+	Category int32        `nbt:"category"`
+	Name     string       `nbt:"name"`
+	Icon     CreativeItem `nbt:"icon"`
+}
+
 // CreativeItem represents the structure of a creative item that dragonfly reads from creative_items.nbt.
 type CreativeItem struct {
 	Name            string         `nbt:"name"`
 	Meta            int16          `nbt:"meta,omitempty"`
 	NBT             map[string]any `nbt:"nbt,omitempty"`
 	BlockProperties map[string]any `nbt:"block_properties,omitempty"`
+	GroupIndex      int32          `nbt:"group_index,omitempty""`
+}
+
+type VanillaItemEntry struct {
+	RuntimeID      int32          `nbt:"runtime_id"`
+	ComponentBased bool           `nbt:"component_based"`
+	Version        int32          `nbt:"version"`
+	Data           map[string]any `nbt:"data,omitempty"`
 }
 
 // RecipeInputItem represents the structure of an input item in a recipe.
@@ -42,6 +63,30 @@ type RecipeOutputItem struct {
 	Count   int16          `nbt:"count"`
 	State   map[string]any `nbt:"block,omitempty"`
 	NBTData map[string]any `nbt:"data,omitempty"`
+}
+
+// FurnaceRecipe represents the structure of a shaped recipe in dragonfly, used in crafting_data.nbt.
+type FurnaceRecipe struct {
+	Input  RecipeInputItem  `nbt:"input,omitempty"`
+	Output RecipeOutputItem `nbt:"output,omitempty"`
+	Block  string           `nbt:"block,omitempty"`
+}
+
+// NewFurnaceRecipe creates a new FurnaceRecipe from a protocol.FurnaceRecipe. It converts the input and output
+// items to the RecipeInputItem and RecipeOutputItem structures.
+func NewFurnaceRecipe(recipe protocol.FurnaceRecipe) FurnaceRecipe {
+	return FurnaceRecipe{
+		Input: newInputItem(protocol.ItemDescriptorCount{
+			Descriptor: &protocol.DefaultItemDescriptor{
+				NetworkID:     int16(recipe.InputType.NetworkID),
+				MetadataValue: int16(recipe.InputType.MetadataValue),
+			},
+			Count: 1,
+		}, false),
+		Output: newOutputItem(recipe.Output),
+		Block:  recipe.Block,
+	}
+
 }
 
 // ShapedRecipe represents the structure of a shaped recipe in dragonfly, used in crafting_data.nbt.
@@ -101,6 +146,66 @@ func NewShapelessRecipe(recipe protocol.ShapelessRecipe) ShapelessRecipe {
 		Output:   output,
 		Block:    recipe.Block,
 		Priority: recipe.Priority,
+	}
+}
+
+type PotionRecipes struct {
+	Potions          []PotionRecipe                `nbt:"potions"`
+	ContainerChanges []PotionContainerChangeRecipe `nbt:"container_changes"`
+}
+
+type PotionRecipe struct {
+	Input   RecipeInputItem  `nbt:"input,omitempty"`
+	Reagent RecipeInputItem  `nbt:"reagent,omitempty"`
+	Output  RecipeOutputItem `nbt:"output,omitempty"`
+}
+
+func NewPotionRecipe(recipe protocol.PotionRecipe) PotionRecipe {
+	input := protocol.ItemDescriptorCount{
+		Descriptor: &protocol.DefaultItemDescriptor{
+			NetworkID:     int16(recipe.InputPotionID),
+			MetadataValue: int16(recipe.InputPotionMetadata),
+		},
+		Count: 1,
+	}
+	reagent := protocol.ItemDescriptorCount{
+		Descriptor: &protocol.DefaultItemDescriptor{
+			NetworkID:     int16(recipe.ReagentItemID),
+			MetadataValue: int16(recipe.ReagentItemMetadata),
+		},
+		Count: 1,
+	}
+	output := protocol.ItemStack{
+		ItemType: protocol.ItemType{
+			NetworkID:     recipe.OutputPotionID,
+			MetadataValue: uint32(recipe.OutputPotionMetadata),
+		},
+		Count: 1,
+	}
+	return PotionRecipe{
+		Input:   newInputItem(input, false),
+		Reagent: newInputItem(reagent, false),
+		Output:  newOutputItem(output),
+	}
+}
+
+type PotionContainerChangeRecipe struct {
+	Input   string          `nbt:"input,omitempty"`
+	Reagent RecipeInputItem `nbt:"reagent,omitempty"`
+	Output  string          `nbt:"output,omitempty"`
+}
+
+func NewPotionContainerChangeRecipe(recipe protocol.PotionContainerChangeRecipe) PotionContainerChangeRecipe {
+	reagent := protocol.ItemDescriptorCount{
+		Descriptor: &protocol.DefaultItemDescriptor{
+			NetworkID: int16(recipe.ReagentItemID),
+		},
+		Count: 1,
+	}
+	return PotionContainerChangeRecipe{
+		Input:   data.ItemNetworkIDToName[recipe.InputItemID],
+		Reagent: newInputItem(reagent, false),
+		Output:  data.ItemNetworkIDToName[recipe.OutputItemID],
 	}
 }
 
