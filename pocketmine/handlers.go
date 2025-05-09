@@ -3,14 +3,15 @@ package pocketmine
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
+	"strings"
+
 	"github.com/df-mc/datagen/data"
 	"github.com/df-mc/datagen/write"
 	"github.com/sandertv/gophertunnel/minecraft"
 	"github.com/sandertv/gophertunnel/minecraft/nbt"
 	"github.com/sandertv/gophertunnel/minecraft/protocol"
 	"github.com/sandertv/gophertunnel/minecraft/protocol/packet"
-	"slices"
-	"strings"
 )
 
 func HandleGameData(gameData minecraft.GameData) {
@@ -46,32 +47,13 @@ func HandleAvailableActorIdentifiers(pk *packet.AvailableActorIdentifiers) {
 }
 
 func HandleBiomeDefinitionList(pk *packet.BiomeDefinitionList) {
-	var biomes map[string]any
-	err := nbt.Unmarshal(pk.SerialisedBiomeDefinitions, &biomes)
-	if err != nil {
-		panic(fmt.Errorf("failed to unmarshal biome definitions: %w", err))
+	biomes := make(map[string]BiomeDefinition)
+	list := pk.StringList
+	for _, definition := range pk.BiomeDefinitions {
+		name := list[definition.NameIndex]
+		biomes[name] = newBiomeDefinition(definition, list)
 	}
-	for _, v := range biomes {
-		m := v.(map[string]any)
-		keys := []string{
-			"minecraft:capped_surface",
-			"minecraft:consolidated_features",
-			"minecraft:frozen_ocean_surface",
-			"minecraft:legacy_world_generation_rules",
-			"minecraft:mesa_surface",
-			"minecraft:mountain_parameters",
-			"minecraft:multinoise_generation_rules",
-			"minecraft:overworld_generation_rules",
-			"minecraft:surface_material_adjustments",
-			"minecraft:surface_parameters",
-			"minecraft:swamp_surface",
-		}
-		for _, key := range keys {
-			delete(m, key)
-		}
-	}
-	write.NBT("output/pocketmine/biome_definitions.nbt", biomes)
-	write.Raw("output/pocketmine/biome_definitions_full.nbt", pk.SerialisedBiomeDefinitions)
+	write.JSON("output/pocketmine/biome_definitions.json", biomes)
 }
 
 func HandleCraftingData(pk *packet.CraftingData) {

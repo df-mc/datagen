@@ -2,10 +2,12 @@ package dragonfly
 
 import (
 	"fmt"
+	"math"
+
 	"github.com/df-mc/datagen/data"
 	"github.com/df-mc/dragonfly/server/world/chunk"
+	"github.com/samber/lo"
 	"github.com/sandertv/gophertunnel/minecraft/protocol"
-	"math"
 )
 
 const (
@@ -270,4 +272,53 @@ func newOutputItem(output protocol.ItemStack) RecipeOutputItem {
 		}
 	}
 	return item
+}
+
+type BiomeDefinition struct {
+	BiomeName string `nbt:"name"`
+	BiomeID   uint16 `nbt:"id,omitempty"`
+
+	Temperature      float32 `nbt:"temperature"`
+	Downfall         float32 `nbt:"downfall"`
+	RedSporeDensity  float32 `nbt:"redSporeDensity"`
+	BlueSporeDensity float32 `nbt:"blueSporeDensity"`
+	AshDensity       float32 `nbt:"ashDensity"`
+	WhiteAshDensity  float32 `nbt:"whiteAshDensity"`
+
+	Depth          float32 `nbt:"depth"`
+	Scale          float32 `nbt:"scale"`
+	MapWaterColour int32   `nbt:"mapWaterColour"`
+
+	Rain bool     `nbt:"rain"`
+	Tags []string `nbt:"tags"`
+}
+
+func newBiomeDefinition(definition protocol.BiomeDefinition, list []string) BiomeDefinition {
+	var biomeID uint16
+	if v, ok := definition.BiomeID.Value(); ok {
+		biomeID = v
+	}
+	var tags []string
+	if v, ok := definition.Tags.Value(); ok {
+		tags = lo.Map(v, func(i uint16, _ int) string {
+			return list[i]
+		})
+	}
+
+	biomeName := list[definition.NameIndex]
+	return BiomeDefinition{
+		BiomeName:        biomeName,
+		BiomeID:          biomeID,
+		Temperature:      definition.Temperature,
+		Downfall:         definition.Downfall,
+		RedSporeDensity:  definition.RedSporeDensity,
+		BlueSporeDensity: definition.BlueSporeDensity,
+		AshDensity:       definition.AshDensity,
+		WhiteAshDensity:  definition.WhiteAshDensity,
+		Depth:            definition.Depth,
+		Scale:            definition.Scale,
+		MapWaterColour:   definition.MapWaterColour,
+		Rain:             definition.Rain,
+		Tags:             tags,
+	}
 }

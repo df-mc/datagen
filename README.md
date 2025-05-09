@@ -9,7 +9,7 @@ for [Dragonfly](https://github.com/df-mc/dragonfly) updates.
 
 1. Download the [latest version of BDS](https://www.minecraft.net/en-us/download/server/bedrock) and run the
    server. You will also need to generate a vanilla world with education features and any other appropriate
-   experiments enabled.
+   experiments enabled. Ensure `block-network-ids-are-hashes` is disabled within BDS `server.properties` aswell
 2. Make sure `data/block_state_meta_map.json` and `data/canonical_block_states.nbt` are up-to-date
    from [BedrockData](https://github.com/pmmp/BedrockData) (or newly generated
    from [bds-mod-mapping](https://github.com/pmmp/bds-mod-mapping))

@@ -3,9 +3,10 @@ package write
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/sandertv/gophertunnel/minecraft/nbt"
 	"os"
 	"path/filepath"
+
+	"github.com/sandertv/gophertunnel/minecraft/nbt"
 )
 
 func JSON(path string, v any) {
