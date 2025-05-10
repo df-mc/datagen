@@ -43,7 +43,6 @@ func main() {
 		case *packet.AvailableActorIdentifiers:
 			pocketmine.HandleAvailableActorIdentifiers(p)
 		case *packet.BiomeDefinitionList:
-			dragonfly.HandleBiomeDefinitionList(p)
 			pocketmine.HandleBiomeDefinitionList(p)
 		case *packet.CraftingData:
 			dragonfly.HandleCraftingData(p)

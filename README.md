@@ -33,7 +33,7 @@ for [Dragonfly](https://github.com/df-mc/dragonfly) updates.
 | [server/item/recipe/potion_data.nbt](https://github.com/df-mc/dragonfly/blob/master/server/item/recipe/potion_data.nbt)               | This file contains a list of brewing stand recipes                                  |
 | [server/item/recipe/smithing_data.nbt](https://github.com/df-mc/dragonfly/blob/master/server/item/recipe/smithing_data.nbt)           | This file contains a list of recipes for the smithing table, excluding armour trims |
 | [server/item/recipe/smithing_trim_data.nbt](https://github.com/df-mc/dragonfly/blob/master/server/item/recipe/smithing_trim_data.nbt) | This file contains a list of recipes for armour trims in the smithing table         |
-| [server/vanilla_items.nbt](https://github.com/df-mc/dragonfly/blob/master/server/world/item_runtime_ids.nbt)                          | This file contains a list of all vanilla items with their runtime ID and version    |
+| [server/world/vanilla_items.nbt](https://github.com/df-mc/dragonfly/blob/master/server/world/vanilla_items.nbt)                       | This file contains a list of all vanilla items with their runtime ID and version    |
 
 ## PMMP Data (output/pocketmine)
 
@@ -44,8 +44,7 @@ for [Dragonfly](https://github.com/df-mc/dragonfly) updates.
 
 | File                                                                                                                                 | Description                                                                                                 |
 |--------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
-| [biome_definitions.nbt](https://github.com/pmmp/BedrockData/blob/master/biome_definitions.nbt)                                       | This file contains a filtered version of the biome mappings obtained from the BiomeDefinitionList packet    |
-| [biome_definitions_full.nbt](https://github.com/pmmp/BedrockData/blob/master/biome_definitions_full.nbt)                             | This file contains the raw biome mappings obtained from the BiomeDefinitionList packet                      |
+| [biome_definitions.json](https://github.com/pmmp/BedrockData/blob/master/biome_definitions.json)                                     | This file contains the biome mappings obtained from the BiomeDefinitionList packet                          |
 | [creativeitems.json](https://github.com/pmmp/BedrockData/blob/master/creativeitems.json)                                             | The file contains the creative groups and items obtained from the CreativeContent packet                    |
 | [entity_id_map.json](https://github.com/pmmp/BedrockData/blob/master/entity_id_map.json)                                             | This file contains a mapping of entity identifiers to their legacy, numerical IDs                           |
 | [entity_identifiers.nbt](https://github.com/pmmp/BedrockData/blob/master/entity_identifiers.nbt)                                     | This file contains entity identifier mappings obtained from the AvailableActorIdentifiers packet            |

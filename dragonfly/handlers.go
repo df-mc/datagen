@@ -3,7 +3,6 @@ package dragonfly
 import (
 	"fmt"
 	"math"
-	"sort"
 
 	"github.com/df-mc/datagen/data"
 	"github.com/df-mc/datagen/write"
@@ -112,18 +111,4 @@ func creativeItemFromStack(s protocol.ItemStack) CreativeItem {
 		}
 	}
 	return ci
-}
-
-func HandleBiomeDefinitionList(pk *packet.BiomeDefinitionList) {
-	var biomes []BiomeDefinition
-	list := pk.StringList
-
-	for _, definition := range pk.BiomeDefinitions {
-		biomes = append(biomes, newBiomeDefinition(definition, list))
-	}
-	sort.Slice(biomes, func(i, j int) bool {
-		return biomes[i].BiomeName < biomes[j].BiomeName
-	})
-
-	write.NBT("output/dragonfly/server/world/biome_definitions.nbt", biomes)
 }
