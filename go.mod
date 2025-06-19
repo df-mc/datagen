@@ -5,7 +5,7 @@ go 1.24.1
 require (
 	github.com/df-mc/dragonfly v0.10.2-0.20250212065227-313e63bba44f
 	github.com/samber/lo v1.50.0
-	github.com/sandertv/gophertunnel v1.46.0
+	github.com/sandertv/gophertunnel v1.47.2
 	golang.org/x/oauth2 v0.30.0
 )
 
