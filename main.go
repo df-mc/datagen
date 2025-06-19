@@ -2,6 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/df-mc/datagen/dragonfly"
 	"github.com/df-mc/datagen/pocketmine"
 	_ "github.com/df-mc/dragonfly/server/world"
@@ -9,9 +13,6 @@ import (
 	"github.com/sandertv/gophertunnel/minecraft/auth"
 	"github.com/sandertv/gophertunnel/minecraft/protocol/packet"
 	"golang.org/x/oauth2"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 func main() {

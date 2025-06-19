@@ -2,13 +2,14 @@ package dragonfly
 
 import (
 	"fmt"
+	"math"
+
 	"github.com/df-mc/datagen/data"
 	"github.com/df-mc/datagen/write"
 	"github.com/df-mc/dragonfly/server/world/chunk"
 	"github.com/sandertv/gophertunnel/minecraft"
 	"github.com/sandertv/gophertunnel/minecraft/protocol"
 	"github.com/sandertv/gophertunnel/minecraft/protocol/packet"
-	"math"
 )
 
 func HandleGameData(gameData minecraft.GameData) {

@@ -2,10 +2,11 @@ package dragonfly
 
 import (
 	"fmt"
+	"math"
+
 	"github.com/df-mc/datagen/data"
 	"github.com/df-mc/dragonfly/server/world/chunk"
 	"github.com/sandertv/gophertunnel/minecraft/protocol"
-	"math"
 )
 
 const (
